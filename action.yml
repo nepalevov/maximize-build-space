@@ -239,8 +239,8 @@ runs:
         if [[ ${{ inputs.docker-cleanup }} == 'true' ]]; then
           if [[ ${{ inputs.verbose }} == 'true' ]]; then
             echo "::group::Docker cleanup"
-            time sudo docker image prune --all --force
-            time sudo docker builder prune --all --force
+            sudo docker image prune --all --force
+            sudo docker builder prune --all --force
             echo "::endgroup::"
           else
             sudo docker image prune --all --force > /dev/null
@@ -252,8 +252,8 @@ runs:
         if [[ ${{ inputs.remove-swapfile }} == 'true' ]]; then
           if [[ ${{ inputs.verbose }} == 'true' ]]; then
             echo "::group::Removing swapfile"
-            time sudo swapoff -a
-            time sudo eatmydata rm -f /mnt/swapfile
+            sudo swapoff -a
+            sudo eatmydata rm -f /mnt/swapfile
             echo "::endgroup::"
           else
             sudo swapoff -a
@@ -265,7 +265,7 @@ runs:
         if [[ ${{ inputs.remove-java }} == 'true' ]]; then
           if [[ ${{ inputs.verbose }} == 'true' ]]; then
             echo "::group::Removing Java"
-            time sudo apt-get remove -y '^temurin-.*-jdk' ant ant-optional
+            sudo apt-get remove -y '^temurin-.*-jdk' ant ant-optional
             echo "::endgroup::"
           else
             sudo apt-get remove -y '^temurin-.*-jdk' ant ant-optional > /dev/null
@@ -275,22 +275,12 @@ runs:
 
         # Browser removal (apt + directories)
         if [[ ${{ inputs.remove-browsers }} == 'true' ]]; then
-          if [[ "$(uname -m)" == "x86_64" ]]; then
-            if [[ ${{ inputs.verbose }} == 'true' ]]; then
-              echo "::group::Removing browsers"
-              time sudo apt-get remove -y google-chrome-stable microsoft-edge-stable firefox
-              echo "::endgroup::"
-            else
-              sudo apt-get remove -y google-chrome-stable microsoft-edge-stable firefox > /dev/null
-            fi
+          if [[ ${{ inputs.verbose }} == 'true' ]]; then
+            echo "::group::Removing browsers"
+            sudo apt-get remove -y google-chrome-stable microsoft-edge-stable firefox --fix-missing
+            echo "::endgroup::"
           else
-            if [[ ${{ inputs.verbose }} == 'true' ]]; then
-              echo "::group::Removing Firefox"
-              time sudo apt-get remove -y firefox
-              echo "::endgroup::"
-            else
-              sudo apt-get remove -y firefox > /dev/null
-            fi
+            sudo apt-get remove -y google-chrome-stable microsoft-edge-stable firefox > /dev/null
           fi
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/lib/firefox /usr/local/share/gecko_driver /usr/local/share/chromium /opt/microsoft /opt/google /usr/local/share/chromedriver-linux64 /usr/local/share/edge_driver /usr/bin/chromium /usr/bin/chromium-browser"
         fi
@@ -301,7 +291,7 @@ runs:
           # Remove cloud CLIs via apt
           if [[ ${{ inputs.verbose }} == 'true' ]]; then
             echo "::group::Removing cloud tools"
-            time sudo apt-get remove -y azure-cli google-cloud-cli session-manager-plugin --fix-missing
+            sudo apt-get remove -y azure-cli google-cloud-cli session-manager-plugin --fix-missing
             echo "::endgroup::"
           else
             sudo apt-get remove -y azure-cli google-cloud-cli session-manager-plugin --fix-missing > /dev/null
@@ -314,7 +304,7 @@ runs:
           # Remove kubectl via apt
           if [[ ${{ inputs.verbose }} == 'true' ]]; then
             echo "::group::Removing Kubernetes tools"
-            time sudo apt-get remove -y kubectl --fix-missing
+            sudo apt-get remove -y kubectl --fix-missing
             echo "::endgroup::"
           else
             sudo apt-get remove -y kubectl --fix-missing > /dev/null 2>&1
@@ -326,7 +316,7 @@ runs:
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/share/Az_* /usr/share/PowerShellGet* /usr/local/share/powershell"
           if [[ ${{ inputs.verbose }} == 'true' ]]; then
             echo "::group::Removing PowerShell"
-            time sudo apt-get remove -y powershell --fix-missing
+            sudo apt-get remove -y powershell --fix-missing
             echo "::endgroup::"
           else
             sudo apt-get remove -y powershell --fix-missing > /dev/null
@@ -337,7 +327,7 @@ runs:
         if [[ ${{ inputs.remove-container-tools }} == 'true' ]]; then
           if [[ ${{ inputs.verbose }} == 'true' ]]; then
             echo "::group::Removing container tools"
-            time sudo apt-get remove -y podman buildah skopeo containernetworking-plugins --fix-missing
+            sudo apt-get remove -y podman buildah skopeo containernetworking-plugins --fix-missing
             echo "::endgroup::"
           else
             sudo apt-get remove -y podman buildah skopeo containernetworking-plugins --fix-missing > /dev/null
@@ -359,15 +349,15 @@ runs:
         if [[ ${{ inputs.remove-large-packages }} == 'true' ]]; then
           if [[ ${{ inputs.verbose }} == 'true' ]]; then
             echo "::group::Removing large packages"
-            time sudo apt-get remove -y '^aspnetcore-.*'
-            time sudo apt-get remove -y '^dotnet-.*'
-            time sudo apt-get remove -y '^llvm-.*'
-            time sudo apt-get remove -y 'php.*'
-            time sudo apt-get remove -y '^mongodb-.*'
-            time sudo apt-get remove -y '^mysql-.*'
-            time sudo apt-get remove -y mono-devel libgl1-mesa-dri --fix-missing
-            time sudo apt-get autoremove -y
-            time sudo apt-get clean
+            sudo apt-get remove -y '^aspnetcore-.*'
+            sudo apt-get remove -y '^dotnet-.*'
+            sudo apt-get remove -y '^llvm-.*'
+            sudo apt-get remove -y 'php.*'
+            sudo apt-get remove -y '^mongodb-.*'
+            sudo apt-get remove -y '^mysql-.*'
+            sudo apt-get remove -y mono-devel libgl1-mesa-dri --fix-missing
+            sudo apt-get autoremove -y
+            sudo apt-get clean
             echo "::endgroup::"
           else
             sudo apt-get remove -y '^aspnetcore-.*' > /dev/null
