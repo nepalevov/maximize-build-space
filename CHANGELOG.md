@@ -28,3 +28,4 @@ Initial release
 - New `remove-go` option to remove Go language
 - New `remove-ruby` option to remove Ruby language
 - Renamed `remove-docker-images` to `docker-cleanup` and add docker builder prune for build cache cleanup
+- Enhanced verbose mode with more detailed output for each step

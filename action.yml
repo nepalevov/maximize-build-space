@@ -183,8 +183,9 @@ runs:
         fi
         echo
 
+        echo -n "  Setting:     "
         if [[ ${{ inputs.set-tmpdir }} == 'true' ]]; then
-          echo "  Setting TMPDIR to /mnt"
+          echo -n "TMPDIR to /mnt"
         fi
         echo
 
@@ -237,8 +238,10 @@ runs:
         # Docker Cleanup
         if [[ ${{ inputs.docker-cleanup }} == 'true' ]]; then
           if [[ ${{ inputs.verbose }} == 'true' ]]; then
-            sudo docker image prune --all --force
-            sudo docker builder prune --all --force
+            echo "::group::Docker cleanup"
+            time sudo docker image prune --all --force
+            time sudo docker builder prune --all --force
+            echo "::endgroup::"
           else
             sudo docker image prune --all --force > /dev/null
             sudo docker builder prune --all --force > /dev/null
@@ -247,14 +250,23 @@ runs:
 
         # Swapfile removal
         if [[ ${{ inputs.remove-swapfile }} == 'true' ]]; then
-          sudo swapoff -a ${verbose}
-          sudo rm -f ${verbose} /mnt/swapfile
+          if [[ ${{ inputs.verbose }} == 'true' ]]; then
+            echo "::group::Removing swapfile"
+            time sudo swapoff -a
+            time sudo eatmydata rm -f /mnt/swapfile
+            echo "::endgroup::"
+          else
+            sudo swapoff -a
+            sudo eatmydata rm -f /mnt/swapfile
+          fi
         fi
 
         # Java removal
         if [[ ${{ inputs.remove-java }} == 'true' ]]; then
           if [[ ${{ inputs.verbose }} == 'true' ]]; then
-            sudo apt-get remove -y '^temurin-.*-jdk' ant ant-optional
+            echo "::group::Removing Java"
+            time sudo apt-get remove -y '^temurin-.*-jdk' ant ant-optional
+            echo "::endgroup::"
           else
             sudo apt-get remove -y '^temurin-.*-jdk' ant ant-optional > /dev/null
           fi
@@ -265,13 +277,17 @@ runs:
         if [[ ${{ inputs.remove-browsers }} == 'true' ]]; then
           if [[ "$(uname -m)" == "x86_64" ]]; then
             if [[ ${{ inputs.verbose }} == 'true' ]]; then
-              sudo apt-get remove -y google-chrome-stable microsoft-edge-stable firefox
+              echo "::group::Removing browsers"
+              time sudo apt-get remove -y google-chrome-stable microsoft-edge-stable firefox
+              echo "::endgroup::"
             else
               sudo apt-get remove -y google-chrome-stable microsoft-edge-stable firefox > /dev/null
             fi
           else
             if [[ ${{ inputs.verbose }} == 'true' ]]; then
-              sudo apt-get remove -y firefox
+              echo "::group::Removing Firefox"
+              time sudo apt-get remove -y firefox
+              echo "::endgroup::"
             else
               sudo apt-get remove -y firefox > /dev/null
             fi
@@ -284,7 +300,9 @@ runs:
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/local/aws-cli /usr/local/aws-sam-cli /opt/az /usr/local/bin/aws /usr/local/bin/aws_completer /usr/local/bin/sam /usr/local/bin/azcopy"
           # Remove cloud CLIs via apt
           if [[ ${{ inputs.verbose }} == 'true' ]]; then
-            sudo apt-get remove -y azure-cli google-cloud-cli session-manager-plugin --fix-missing
+            echo "::group::Removing cloud tools"
+            time sudo apt-get remove -y azure-cli google-cloud-cli session-manager-plugin --fix-missing
+            echo "::endgroup::"
           else
             sudo apt-get remove -y azure-cli google-cloud-cli session-manager-plugin --fix-missing > /dev/null
           fi
@@ -295,7 +313,9 @@ runs:
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/bin/kubectl* /usr/local/bin/kind /usr/local/bin/minikube /usr/local/bin/kustomize /usr/local/bin/helm"
           # Remove kubectl via apt
           if [[ ${{ inputs.verbose }} == 'true' ]]; then
-            sudo apt-get remove -y kubectl --fix-missing
+            echo "::group::Removing Kubernetes tools"
+            time sudo apt-get remove -y kubectl --fix-missing
+            echo "::endgroup::"
           else
             sudo apt-get remove -y kubectl --fix-missing > /dev/null 2>&1
           fi
@@ -305,7 +325,9 @@ runs:
         if [[ ${{ inputs.remove-powershell }} == 'true' ]]; then
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/share/Az_* /usr/share/PowerShellGet* /usr/local/share/powershell"
           if [[ ${{ inputs.verbose }} == 'true' ]]; then
-            sudo apt-get remove -y powershell --fix-missing
+            echo "::group::Removing PowerShell"
+            time sudo apt-get remove -y powershell --fix-missing
+            echo "::endgroup::"
           else
             sudo apt-get remove -y powershell --fix-missing > /dev/null
           fi
@@ -314,33 +336,39 @@ runs:
         # Container tools removal (apt only)
         if [[ ${{ inputs.remove-container-tools }} == 'true' ]]; then
           if [[ ${{ inputs.verbose }} == 'true' ]]; then
-            sudo apt-get remove -y podman buildah skopeo containernetworking-plugins --fix-missing
+            echo "::group::Removing container tools"
+            time sudo apt-get remove -y podman buildah skopeo containernetworking-plugins --fix-missing
+            echo "::endgroup::"
           else
             sudo apt-get remove -y podman buildah skopeo containernetworking-plugins --fix-missing > /dev/null
           fi
         fi
 
-        # Remove directories and files in parallel (4 at a time)
+        # Remove directories and files using eatmydata for faster deletion
         if [[ -n "$DIRS_TO_REMOVE" ]]; then
           if [[ ${{ inputs.verbose }} == 'true' ]]; then
-            printf '%s\n' $DIRS_TO_REMOVE | xargs -I {} sudo rm -rf -v {}
+            echo "::group::Removing directories"
+            printf '%s\n' $DIRS_TO_REMOVE | xargs -I {} sudo eatmydata rm -rf -v {}
+            echo "::endgroup::"
           else
-            printf '%s\0' $DIRS_TO_REMOVE | sudo xargs -0 -n1 -P4 rm -rf
+            printf '%s\0' $DIRS_TO_REMOVE | sudo xargs -0 -n1 -P4 eatmydata rm -rf
           fi
         fi
 
         # Large packages removal (apt only)
         if [[ ${{ inputs.remove-large-packages }} == 'true' ]]; then
           if [[ ${{ inputs.verbose }} == 'true' ]]; then
-            sudo apt-get remove -y '^aspnetcore-.*'
-            sudo apt-get remove -y '^dotnet-.*'
-            sudo apt-get remove -y '^llvm-.*'
-            sudo apt-get remove -y 'php.*'
-            sudo apt-get remove -y '^mongodb-.*'
-            sudo apt-get remove -y '^mysql-.*'
-            sudo apt-get remove -y mono-devel libgl1-mesa-dri --fix-missing
-            sudo apt-get autoremove -y
-            sudo apt-get clean
+            echo "::group::Removing large packages"
+            time sudo apt-get remove -y '^aspnetcore-.*'
+            time sudo apt-get remove -y '^dotnet-.*'
+            time sudo apt-get remove -y '^llvm-.*'
+            time sudo apt-get remove -y 'php.*'
+            time sudo apt-get remove -y '^mongodb-.*'
+            time sudo apt-get remove -y '^mysql-.*'
+            time sudo apt-get remove -y mono-devel libgl1-mesa-dri --fix-missing
+            time sudo apt-get autoremove -y
+            time sudo apt-get clean
+            echo "::endgroup::"
           else
             sudo apt-get remove -y '^aspnetcore-.*' > /dev/null
             sudo apt-get remove -y '^dotnet-.*' > /dev/null
