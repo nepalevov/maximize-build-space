@@ -1,0 +1,17 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "09:00"
+    commit-message:
+      # Prefix all commit messages with "chore: "
+      prefix: "chore"
+    groups:
+      github-actions:
+        applies-to: version-updates
+        patterns:
+          - "*"
+    open-pull-requests-limit: 100

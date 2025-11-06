@@ -1,0 +1,127 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - "**.md"
+      - LICENSE
+      - "**.json"
+  workflow_dispatch:
+    inputs:
+      verbose:
+        type: boolean
+        description: "Enable verbose logging"
+        required: false
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  cleanup:
+    strategy:
+      fail-fast: false
+      matrix:
+        option:
+          - name: "all"
+            remove-android: "true"
+            remove-dotnet: "true"
+            remove-haskell: "true"
+            remove-codeql: "true"
+            docker-cleanup: "true"
+            remove-cached-tools: "true"
+            remove-large-packages: "true"
+            remove-swapfile: "true"
+            remove-java: "true"
+            remove-swift: "true"
+            remove-julia: "true"
+            remove-browsers: "true"
+            remove-cloud-tools: "true"
+            remove-kubernetes-tools: "true"
+            remove-powershell: "true"
+            remove-container-tools: "true"
+            remove-rust: "true"
+            remove-python: "true"
+            remove-node: "true"
+            remove-go: "true"
+            remove-ruby: "true"
+            set-tmpdir: "true"
+          - name: "remove-android"
+            remove-android: "true"
+          - name: "remove-dotnet"
+            remove-dotnet: "true"
+          - name: "remove-haskell"
+            remove-haskell: "true"
+          - name: "remove-codeql"
+            remove-codeql: "true"
+          - name: "docker-cleanup"
+            docker-cleanup: "true"
+          - name: "remove-cached-tools"
+            remove-cached-tools: "true"
+          - name: "remove-large-packages"
+            remove-large-packages: "true"
+          - name: "remove-swapfile"
+            remove-swapfile: "true"
+          - name: "remove-java"
+            remove-java: "true"
+          - name: "remove-swift"
+            remove-swift: "true"
+          - name: "remove-julia"
+            remove-julia: "true"
+          - name: "remove-browsers"
+            remove-browsers: "true"
+          - name: "remove-cloud-tools"
+            remove-cloud-tools: "true"
+          - name: "remove-kubernetes-tools"
+            remove-kubernetes-tools: "true"
+          - name: "remove-powershell"
+            remove-powershell: "true"
+          - name: "remove-container-tools"
+            remove-container-tools: "true"
+          - name: "remove-rust"
+            remove-rust: "true"
+          - name: "remove-python"
+            remove-python: "true"
+          - name: "remove-node"
+            remove-node: "true"
+          - name: "remove-go"
+            remove-go: "true"
+          - name: "remove-ruby"
+            remove-ruby: "true"
+          - name: "set-tmpdir"
+            set-tmpdir: "true"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Maximize build space
+        uses: ./
+        with:
+          remove-android: ${{ matrix.option.remove-android || 'false' }}
+          remove-dotnet: ${{ matrix.option.remove-dotnet || 'false' }}
+          remove-haskell: ${{ matrix.option.remove-haskell || 'false' }}
+          remove-codeql: ${{ matrix.option.remove-codeql || 'false' }}
+          docker-cleanup: ${{ matrix.option.docker-cleanup || 'false' }}
+          remove-cached-tools: ${{ matrix.option.remove-cached-tools || 'false' }}
+          remove-large-packages: ${{ matrix.option.remove-large-packages || 'false' }}
+          remove-swapfile: ${{ matrix.option.remove-swapfile || 'false' }}
+          remove-java: ${{ matrix.option.remove-java || 'false' }}
+          remove-swift: ${{ matrix.option.remove-swift || 'false' }}
+          remove-julia: ${{ matrix.option.remove-julia || 'false' }}
+          remove-browsers: ${{ matrix.option.remove-browsers || 'false' }}
+          remove-cloud-tools: ${{ matrix.option.remove-cloud-tools || 'false' }}
+          remove-kubernetes-tools: ${{ matrix.option.remove-kubernetes-tools || 'false' }}
+          remove-powershell: ${{ matrix.option.remove-powershell || 'false' }}
+          remove-container-tools: ${{ matrix.option.remove-container-tools || 'false' }}
+          remove-rust: ${{ matrix.option.remove-rust || 'false' }}
+          remove-python: ${{ matrix.option.remove-python || 'false' }}
+          remove-node: ${{ matrix.option.remove-node || 'false' }}
+          remove-go: ${{ matrix.option.remove-go || 'false' }}
+          remove-ruby: ${{ matrix.option.remove-ruby || 'false' }}
+          set-tmpdir: ${{ matrix.option.set-tmpdir || 'false' }}
+          verbose: ${{ inputs.verbose || 'false' }}
