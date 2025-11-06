@@ -6,5 +6,3 @@
 ### Features
 
 * release 1.0.0 ([d9c7251](https://github.com/nepalevov/maximize-build-space/commit/d9c7251e92f088ff975a41b5dfb9a6aaaea1c7ac))
-
-## Changelog
