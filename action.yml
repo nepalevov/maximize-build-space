@@ -13,15 +13,11 @@ inputs:
     required: false
     default: "false"
   remove-haskell:
-    description: "Removes GHC (Haskell) artifacts"
+    description: "Removes Haskell runtime"
     required: false
     default: "false"
   remove-codeql:
     description: "Removes CodeQL Action Bundles"
-    required: false
-    default: "false"
-  docker-cleanup:
-    description: "Performs Docker system cleanup"
     required: false
     default: "false"
   remove-large-packages:
@@ -86,6 +82,10 @@ inputs:
     default: "false"
   remove-ruby:
     description: "Removes Ruby language"
+    required: false
+    default: "false"
+  docker-cleanup:
+    description: "Performs Docker system cleanup"
     required: false
     default: "false"
   set-tmpdir:

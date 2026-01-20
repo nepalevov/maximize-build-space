@@ -34,7 +34,6 @@ jobs:
             remove-dotnet: "true"
             remove-haskell: "true"
             remove-codeql: "true"
-            docker-cleanup: "true"
             remove-cached-tools: "true"
             remove-large-packages: "true"
             remove-swapfile: "true"
@@ -51,6 +50,7 @@ jobs:
             remove-node: "true"
             remove-go: "true"
             remove-ruby: "true"
+            docker-cleanup: "true"
             set-tmpdir: "true"
           - name: "remove-android"
             remove-android: "true"
@@ -60,8 +60,6 @@ jobs:
             remove-haskell: "true"
           - name: "remove-codeql"
             remove-codeql: "true"
-          - name: "docker-cleanup"
-            docker-cleanup: "true"
           - name: "remove-cached-tools"
             remove-cached-tools: "true"
           - name: "remove-large-packages"
@@ -94,6 +92,8 @@ jobs:
             remove-go: "true"
           - name: "remove-ruby"
             remove-ruby: "true"
+          - name: "docker-cleanup"
+            docker-cleanup: "true"
           - name: "set-tmpdir"
             set-tmpdir: "true"
     runs-on: ubuntu-latest
@@ -106,7 +106,6 @@ jobs:
           remove-dotnet: ${{ matrix.option.remove-dotnet || 'false' }}
           remove-haskell: ${{ matrix.option.remove-haskell || 'false' }}
           remove-codeql: ${{ matrix.option.remove-codeql || 'false' }}
-          docker-cleanup: ${{ matrix.option.docker-cleanup || 'false' }}
           remove-cached-tools: ${{ matrix.option.remove-cached-tools || 'false' }}
           remove-large-packages: ${{ matrix.option.remove-large-packages || 'false' }}
           remove-swapfile: ${{ matrix.option.remove-swapfile || 'false' }}
@@ -123,5 +122,6 @@ jobs:
           remove-node: ${{ matrix.option.remove-node || 'false' }}
           remove-go: ${{ matrix.option.remove-go || 'false' }}
           remove-ruby: ${{ matrix.option.remove-ruby || 'false' }}
+          docker-cleanup: ${{ matrix.option.docker-cleanup || 'false' }}
           set-tmpdir: ${{ matrix.option.set-tmpdir || 'false' }}
           verbose: ${{ inputs.verbose || 'false' }}
