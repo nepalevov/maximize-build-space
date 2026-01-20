@@ -114,6 +114,11 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
+        shopt -s nullglob
+
+        list_installed_dpkg() {
+          dpkg --get-selections $@ | grep -v deinstall | cut -f1
+        }
 
         CODENAME=$(lsb_release -c | cut -d ":" -f 2 | xargs)
 
@@ -196,7 +201,6 @@ runs:
 
         echo "Removing unwanted software... "
 
-        shopt -s nullglob
         DIRS_TO_REMOVE=""
         if [[ ${{ inputs.remove-dotnet }} == 'true' ]]; then
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/share/dotnet"
@@ -287,14 +291,15 @@ runs:
 
         # Cloud tools removal (directories + apt)
         if [[ ${{ inputs.remove-cloud-tools }} == 'true' ]]; then
-          DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/local/aws-cli /usr/local/aws-sam-cli /opt/az /usr/local/bin/aws /usr/local/bin/aws_completer /usr/local/bin/sam /usr/local/bin/azcopy"
+          DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/local/aws-cli /usr/local/aws-sam-cli /opt/az /usr/local/bin/aws /usr/local/bin/aws_completer /usr/local/bin/sam /usr/local/bin/azcopy /usr/lib/google-cloud-sdk"
           # Remove cloud CLIs via apt
+          pkgs=$(list_installed_dpkg azure-cli 'google-cloud-*' 'gcloud-*' session-manager-plugin || true)
           if [[ ${{ inputs.verbose }} == 'true' ]]; then
             echo "::group::Removing cloud tools"
-            sudo apt-get remove -y azure-cli google-cloud-cli session-manager-plugin --fix-missing
+            sudo apt-get remove --autoremove -y $pkgs
             echo "::endgroup::"
           else
-            sudo apt-get remove -y azure-cli google-cloud-cli session-manager-plugin --fix-missing > /dev/null
+            sudo apt-get remove --autoremove -y $pkgs > /dev/null
           fi
         fi
 
@@ -347,26 +352,15 @@ runs:
 
         # Large packages removal (apt only)
         if [[ ${{ inputs.remove-large-packages }} == 'true' ]]; then
+          pkgs=$(list_installed_dpkg 'aspnetcore-*' 'dotnet-*' 'llvm-*' '*php*' 'mongodb-*' 'mysql-*' mono-devel libgl1-mesa-dri || true)
           if [[ ${{ inputs.verbose }} == 'true' ]]; then
             echo "::group::Removing large packages"
-            sudo apt-get remove -y '^aspnetcore-.*'
-            sudo apt-get remove -y '^dotnet-.*'
-            sudo apt-get remove -y '^llvm-.*'
-            sudo apt-get remove -y 'php.*'
-            sudo apt-get remove -y '^mongodb-.*'
-            sudo apt-get remove -y '^mysql-.*'
-            sudo apt-get remove -y mono-devel libgl1-mesa-dri --fix-missing
+            sudo apt-get remove -y $pkgs
             sudo apt-get autoremove -y
             sudo apt-get clean
             echo "::endgroup::"
           else
-            sudo apt-get remove -y '^aspnetcore-.*' > /dev/null
-            sudo apt-get remove -y '^dotnet-.*' > /dev/null
-            sudo apt-get remove -y '^llvm-.*' > /dev/null
-            sudo apt-get remove -y 'php.*' > /dev/null
-            sudo apt-get remove -y '^mongodb-.*' > /dev/null
-            sudo apt-get remove -y '^mysql-.*' > /dev/null
-            sudo apt-get remove -y mono-devel libgl1-mesa-dri --fix-missing > /dev/null
+            sudo apt-get remove -y $pkgs > /dev/null
             sudo apt-get autoremove -y > /dev/null
             sudo apt-get clean > /dev/null
           fi
