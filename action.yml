@@ -269,10 +269,10 @@ runs:
         if [[ ${{ inputs.remove-java }} == 'true' ]]; then
           if [[ ${{ inputs.verbose }} == 'true' ]]; then
             echo "::group::Removing Java"
-            sudo apt-get remove -y '^temurin-.*-jdk' ant ant-optional
+            sudo apt-get remove --autoremove -y '^temurin-.*-jdk' ant ant-optional
             echo "::endgroup::"
           else
-            sudo apt-get remove -y '^temurin-.*-jdk' ant ant-optional > /dev/null
+            sudo apt-get remove --autoremove -y '^temurin-.*-jdk' ant ant-optional > /dev/null
           fi
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/lib/jvm /usr/share/apache-maven-* /usr/share/gradle-*"
         fi
@@ -281,10 +281,10 @@ runs:
         if [[ ${{ inputs.remove-browsers }} == 'true' ]]; then
           if [[ ${{ inputs.verbose }} == 'true' ]]; then
             echo "::group::Removing browsers"
-            sudo apt-get remove -y google-chrome-stable microsoft-edge-stable firefox --fix-missing
+            sudo apt-get remove --autoremove -y google-chrome-stable microsoft-edge-stable firefox --ignore-missing
             echo "::endgroup::"
           else
-            sudo apt-get remove -y google-chrome-stable microsoft-edge-stable firefox > /dev/null
+            sudo apt-get remove --autoremove -y google-chrome-stable microsoft-edge-stable firefox > /dev/null
           fi
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/lib/firefox /usr/local/share/gecko_driver /usr/local/share/chromium /opt/microsoft /opt/google /usr/local/share/chromedriver-linux64 /usr/local/share/edge_driver /usr/bin/chromium /usr/bin/chromium-browser"
         fi
@@ -309,10 +309,10 @@ runs:
           # Remove kubectl via apt
           if [[ ${{ inputs.verbose }} == 'true' ]]; then
             echo "::group::Removing Kubernetes tools"
-            sudo apt-get remove -y kubectl --fix-missing
+            sudo apt-get remove --autoremove -y kubectl --ignore-missing
             echo "::endgroup::"
           else
-            sudo apt-get remove -y kubectl --fix-missing > /dev/null 2>&1
+            sudo apt-get remove --autoremove -y kubectl --ignore-missing > /dev/null
           fi
         fi
 
@@ -321,10 +321,10 @@ runs:
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/share/Az_* /usr/share/PowerShellGet* /usr/local/share/powershell"
           if [[ ${{ inputs.verbose }} == 'true' ]]; then
             echo "::group::Removing PowerShell"
-            sudo apt-get remove -y powershell --fix-missing
+            sudo apt-get remove --autoremove -y powershell --ignore-missing
             echo "::endgroup::"
           else
-            sudo apt-get remove -y powershell --fix-missing > /dev/null
+            sudo apt-get remove --autoremove -y powershell --ignore-missing > /dev/null
           fi
         fi
 
@@ -332,10 +332,10 @@ runs:
         if [[ ${{ inputs.remove-container-tools }} == 'true' ]]; then
           if [[ ${{ inputs.verbose }} == 'true' ]]; then
             echo "::group::Removing container tools"
-            sudo apt-get remove -y podman buildah skopeo containernetworking-plugins --fix-missing
+            sudo apt-get remove --autoremove -y podman buildah skopeo containernetworking-plugins --ignore-missing
             echo "::endgroup::"
           else
-            sudo apt-get remove -y podman buildah skopeo containernetworking-plugins --fix-missing > /dev/null
+            sudo apt-get remove --autoremove -y podman buildah skopeo containernetworking-plugins --ignore-missing > /dev/null
           fi
         fi
 
