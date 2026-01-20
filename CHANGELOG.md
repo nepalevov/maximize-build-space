@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/nepalevov/maximize-build-space/compare/v1.0.1...v1.1.0) (2026-01-20)
+
+
+### Features
+
+* use dpkg output to define what packages to remove ([146a347](https://github.com/nepalevov/maximize-build-space/commit/146a347aa2882b9c4ebf64bd7b23a824213d0b02))
+
+
+### Bug Fixes
+
+* add --autoremove flag for apt-get ([357f889](https://github.com/nepalevov/maximize-build-space/commit/357f8894781cccaf3180b411ea91a3b3f36f4bdb))
+
 ## [1.0.1](https://github.com/nepalevov/maximize-build-space/compare/v1.0.0...v1.0.1) (2025-11-06)
 
 
