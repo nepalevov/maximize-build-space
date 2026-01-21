@@ -117,7 +117,7 @@ runs:
         shopt -s nullglob
 
         list_installed_dpkg() {
-          dpkg --get-selections $@ | grep -v deinstall | cut -f1
+          dpkg --get-selections "$@" | grep -v deinstall | cut -f1
         }
 
         CODENAME=$(lsb_release -c | cut -d ":" -f 2 | xargs)
