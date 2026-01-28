@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/nepalevov/maximize-build-space/compare/v1.1.0...v1.1.1) (2026-01-28)
+
+
+### Bug Fixes
+
+* quote arguments in dpkg command to catch all packages to be removed ([#19](https://github.com/nepalevov/maximize-build-space/issues/19)) ([576a524](https://github.com/nepalevov/maximize-build-space/commit/576a52458586600d137a1de0814072035426675a))
+
 ## [1.1.0](https://github.com/nepalevov/maximize-build-space/compare/v1.0.1...v1.1.0) (2026-01-20)
 
 
