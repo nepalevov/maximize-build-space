@@ -48,21 +48,18 @@ jobs:
         run: |
           set -euo pipefail
 
-          # df reports the filesystem holding the path, so a /mnt that is not a separate mount resolves to "/"
-          disk() { df -B1 --output=size,avail,target "$1" | tail -n1; }
-          read -r root_size root_avail root_mount < <(disk /)
-          read -r mnt_size mnt_avail mnt_mount < <(disk /mnt)
+          read -r root_size root_avail < <(df -B1 --output=size,avail / | tail -n1)
 
-          # Azure Instance Metadata Service; not reachable on every runner type, hence the fallback
-          vm_size=$(curl -sS --max-time 5 -H 'Metadata: true' \
-            'http://169.254.169.254/metadata/instance/compute/vmSize?api-version=2021-02-01&format=text' || echo "-")
+          # Azure Instance Metadata Service; may be unreachable (or empty), hence the fallback
+          vm_size=$(curl -fsS --max-time 5 -H 'Metadata: true' \
+            'http://169.254.169.254/metadata/instance/compute/vmSize?api-version=2021-02-01&format=text' || true)
+          vm_size=${vm_size:--}
 
           mkdir -p result
           jq -n \
             --arg label "$RUNNER_LABEL" \
             --arg vm_size "$vm_size" \
-            --argjson root_size "$root_size" --argjson root_avail "$root_avail" --arg root_mount "$root_mount" \
-            --argjson mnt_size "$mnt_size" --argjson mnt_avail "$mnt_avail" --arg mnt_mount "$mnt_mount" \
+            --argjson root_size "$root_size" --argjson root_avail "$root_avail" \
             '$ARGS.named' | tee "result/${RUNNER_LABEL}.json"
 
           echo "---"
@@ -95,14 +92,12 @@ jobs:
 
           # Keep the order of the requested labels; sizes are in GiB (as printed by `df -h`)
           jq -rn --argjson order "$RUNNERS" '
-            def gib: . / 1073741824 | round;
-            def vol(size; avail; mount):
-              # /mnt resolving to "/" means there is no separate temp disk mounted
-              if mount == "/" then "-" else "\(size | gib) GiB (\(avail | gib) GiB free)" end;
+            # Round up like `df -h` does, so that the table matches the logs
+            def gib: . / 1073741824 | ceil;
             [inputs] | sort_by(.label as $l | $order | index($l)) as $rows
-            | "| Label | VM | Root volume (`/`) | Temp volume (`/mnt`) |",
+            | "| Label | VM | Root disk size | Free |",
               "|---|---|---|---|",
-              ($rows[] | "| `\(.label)` | `\(.vm_size)` | \(vol(.root_size; .root_avail; "")) | \(vol(.mnt_size; .mnt_avail; .mnt_mount)) |")
+              ($rows[] | "| `\(.label)` | `\(.vm_size)` | \(.root_size | gib) GiB | \(.root_avail | gib) GiB |")
           ' results/*.json > table.md
 
           {
@@ -116,8 +111,6 @@ jobs:
             fi
             echo
             cat table.md
-            echo
-            echo "### Markdown to copy"
             echo
             echo '````markdown'
             cat table.md
