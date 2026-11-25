@@ -60,11 +60,9 @@ jobs:
           df -h
 ```
 
-## Inputs
+<!-- action-docs-inputs source="action.yml" -->
 
-See [`action.yml`](action.yml) for a complete list of available removal options.
-
-<!-- TODO: add inputs table with description and defaults  -->
+<!-- action-docs-inputs source="action.yml" -->
 
 ## Credits
 
