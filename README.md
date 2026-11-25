@@ -53,7 +53,7 @@ jobs:
           remove-android: 'true'
           # Other options as needed
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
       - name: Build
         run: |
           echo "Available disk space:"
