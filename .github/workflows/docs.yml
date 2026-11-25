@@ -1,0 +1,50 @@
+name: Documentation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - action.yml
+      - README.md
+      - .github/workflows/docs.yml
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  ACTION_DOCS_VERSION: 2.5.1 # https://www.npmjs.com/package/action-docs
+
+jobs:
+  action-docs:
+    name: action-docs
+    runs-on: ubuntu-latest
+    steps:
+      # Check out the PR branch itself (not the merge ref) so that changes can be pushed back
+      # For fork PRs the token is read-only, so the push below fails and we fall back to a manual update
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.head_ref }}
+      - name: Regenerate README
+        run: npx --yes "action-docs@${ACTION_DOCS_VERSION}" --no-banner --update-readme
+      - name: Commit README
+        run: |
+          if git diff --quiet README.md; then
+            echo "README.md is up to date"
+            exit 0
+          fi
+
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add README.md
+          git commit -m "docs: update README from action.yml"
+
+          if ! git push; then
+            echo "::error file=README.md::README.md is out of date and could not be updated automatically. Run 'npx action-docs --no-banner --update-readme' and commit the result."
+            exit 1
+          fi

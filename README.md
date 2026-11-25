@@ -60,11 +60,35 @@ jobs:
           df -h
 ```
 
+<!-- action-docs-inputs source="action.yml" -->
 ## Inputs
 
-See [`action.yml`](action.yml) for a complete list of available removal options.
-
-<!-- TODO: add inputs table with description and defaults  -->
+| name | description | required | default |
+| --- | --- | --- | --- |
+| `remove-dotnet` | <p>Removes .NET runtime and libraries</p> | `false` | `false` |
+| `remove-android` | <p>Removes Android SDKs and Tools</p> | `false` | `false` |
+| `remove-haskell` | <p>Removes Haskell runtime</p> | `false` | `false` |
+| `remove-codeql` | <p>Removes CodeQL Action Bundles</p> | `false` | `false` |
+| `remove-large-packages` | <p>Removes unwanted large Apt packages</p> | `false` | `false` |
+| `remove-cached-tools` | <p>Removes cached tools used by setup actions by GitHub</p> | `false` | `false` |
+| `remove-swapfile` | <p>Removes the Swapfile</p> | `false` | `false` |
+| `remove-java` | <p>Removes Java, Ant, Gradle and Maven</p> | `false` | `false` |
+| `remove-swift` | <p>Removes Swift toolchain</p> | `false` | `false` |
+| `remove-julia` | <p>Removes Julia</p> | `false` | `false` |
+| `remove-browsers` | <p>Removes Firefox, Chromium, Chrome and Edge</p> | `false` | `false` |
+| `remove-cloud-tools` | <p>Removes AWS CLI, Azure CLI and Google Cloud CLI</p> | `false` | `false` |
+| `remove-kubernetes-tools` | <p>Removes kubectl, helm, kind, minikube and kustomize</p> | `false` | `false` |
+| `remove-powershell` | <p>Removes PowerShell and modules</p> | `false` | `false` |
+| `remove-container-tools` | <p>Removes podman, buildah and skopeo</p> | `false` | `false` |
+| `remove-rust` | <p>Removes Rust, rustup and cargo</p> | `false` | `false` |
+| `remove-python` | <p>Removes pipx and conda (miniconda)</p> | `false` | `false` |
+| `remove-node` | <p>Removes Node.js</p> | `false` | `false` |
+| `remove-go` | <p>Removes Go language</p> | `false` | `false` |
+| `remove-ruby` | <p>Removes Ruby language</p> | `false` | `false` |
+| `docker-cleanup` | <p>Performs Docker system cleanup</p> | `false` | `false` |
+| `set-tmpdir` | <p>Sets TMPDIR environment variable to /mnt for ephemeral disk storage usage</p> | `false` | `false` |
+| `verbose` | <p>Enables detailed logging of the action</p> | `false` | `false` |
+<!-- action-docs-inputs source="action.yml" -->
 
 ## Credits
 
