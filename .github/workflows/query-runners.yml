@@ -1,0 +1,125 @@
+name: Query Runners
+
+# Queries the actual disk layout of GitHub-hosted Linux runners and publishes a Markdown table (job summary) that can be copied into the README
+# Standard runner labels: https://docs.github.com/en/actions/reference/runners/github-hosted-runners#standard-github-hosted-runners-for-public-repositories
+
+on:
+  schedule:
+    # Once a month, on the 1st at 06:00 UTC
+    - cron: "0 6 1 * *"
+  workflow_dispatch:
+    inputs:
+      runners:
+        type: string
+        description: "JSON array of runner labels to query (empty for the default list)"
+        required: false
+
+permissions:
+  contents: read
+
+env:
+  DEFAULT_RUNNERS: '["ubuntu-latest","ubuntu-26.04","ubuntu-24.04","ubuntu-22.04","ubuntu-26.04-arm","ubuntu-24.04-arm","ubuntu-22.04-arm"]'
+
+jobs:
+  prepare:
+    name: prepare
+    runs-on: ubuntu-latest
+    outputs:
+      runners: ${{ steps.runners.outputs.runners }}
+    steps:
+      # Scheduled runs have no inputs, so fall back to the default list; jq validates the JSON and puts it on one line
+      - id: runners
+        env:
+          INPUT_RUNNERS: ${{ inputs.runners }}
+        run: echo "runners=$(jq -c . <<< "${INPUT_RUNNERS:-$DEFAULT_RUNNERS}")" >> "$GITHUB_OUTPUT"
+
+  query:
+    name: query (${{ matrix.runner }})
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: ${{ fromJSON(needs.prepare.outputs.runners) }}
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Collect disk info
+        env:
+          RUNNER_LABEL: ${{ matrix.runner }}
+        run: |
+          set -euo pipefail
+
+          # df reports the filesystem holding the path, so a /mnt that is not a separate mount resolves to "/"
+          disk() { df -B1 --output=size,avail,target "$1" | tail -n1; }
+          read -r root_size root_avail root_mount < <(disk /)
+          read -r mnt_size mnt_avail mnt_mount < <(disk /mnt)
+
+          # Azure Instance Metadata Service; not reachable on every runner type, hence the fallback
+          vm_size=$(curl -sS --max-time 5 -H 'Metadata: true' \
+            'http://169.254.169.254/metadata/instance/compute/vmSize?api-version=2021-02-01&format=text' || echo "-")
+
+          mkdir -p result
+          jq -n \
+            --arg label "$RUNNER_LABEL" \
+            --arg vm_size "$vm_size" \
+            --argjson root_size "$root_size" --argjson root_avail "$root_avail" --arg root_mount "$root_mount" \
+            --argjson mnt_size "$mnt_size" --argjson mnt_avail "$mnt_avail" --arg mnt_mount "$mnt_mount" \
+            '$ARGS.named' | tee "result/${RUNNER_LABEL}.json"
+
+          echo "---"
+          df -h
+          lsblk
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: runner-${{ matrix.runner }}
+          path: result/
+          retention-days: 1
+
+  summary:
+    name: summary
+    needs: [prepare, query]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: runner-*
+          path: results
+          merge-multiple: true
+      - name: Build Markdown table
+        env:
+          RUNNERS: ${{ needs.prepare.outputs.runners }}
+          QUERY_RESULT: ${{ needs.query.result }}
+        run: |
+          set -euo pipefail
+
+          # Keep the order of the requested labels; sizes are in GiB (as printed by `df -h`)
+          jq -rn --argjson order "$RUNNERS" '
+            def gib: . / 1073741824 | round;
+            def vol(size; avail; mount):
+              # /mnt resolving to "/" means there is no separate temp disk mounted
+              if mount == "/" then "-" else "\(size | gib) GiB (\(avail | gib) GiB free)" end;
+            [inputs] | sort_by(.label as $l | $order | index($l)) as $rows
+            | "| Label | VM | Root volume (`/`) | Temp volume (`/mnt`) |",
+              "|---|---|---|---|",
+              ($rows[] | "| `\(.label)` | `\(.vm_size)` | \(vol(.root_size; .root_avail; "")) | \(vol(.mnt_size; .mnt_avail; .mnt_mount)) |")
+          ' results/*.json > table.md
+
+          {
+            echo "## GitHub-hosted runners disk space"
+            echo
+            echo "Queried on $(date -u +%Y-%m-%d)."
+            if [ "$QUERY_RESULT" != success ]; then
+              echo
+              echo "> [!WARNING]"
+              echo "> Some runners could not be queried (result: \`$QUERY_RESULT\`), the table is incomplete."
+            fi
+            echo
+            cat table.md
+            echo
+            echo "### Markdown to copy"
+            echo
+            echo '````markdown'
+            cat table.md
+            echo '````'
+          } | tee -a "$GITHUB_STEP_SUMMARY"
