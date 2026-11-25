@@ -96,7 +96,7 @@ jobs:
             def gib: . / 1073741824 | ceil;
             [inputs] | sort_by(.label as $l | $order | index($l)) as $rows
             | "| Label | VM | Root disk size | Free |",
-              "|---|---|---|---|",
+              "| --- | --- | --- | --- |",
               ($rows[] | "| `\(.label)` | `\(.vm_size)` | \(.root_size | gib) GiB | \(.root_avail | gib) GiB |")
           ' results/*.json > table.md
 

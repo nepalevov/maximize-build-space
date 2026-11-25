@@ -1,8 +1,8 @@
 # Maximize Build Space
 
-Free up to **42 GB** of additional disk space on GitHub Actions runners by removing unnecessary preinstalled software.
+Free up additional disk space on GitHub Actions runners by removing unnecessary preinstalled software
 
-GitHub-hosted runners provide approximately **22 GB** of free disk space by default. If your build requires more space, this action can help by removing unused software packages and optimizing disk usage.
+GitHub-hosted runners provide approximately **86-110 GiB** of free disk space by default (see [How it works](#how-it-works)). If your build requires more space, this action can help by removing unused software packages and optimizing disk usage.
 
 ## Caveats
 
@@ -12,20 +12,31 @@ GitHub-hosted runners provide approximately **22 GB** of free disk space by defa
 
 ## How it works
 
-GitHub-hosted runners use [Azure Standard_D4ads_v5 virtual machines](https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/general-purpose/dadsv5-series) with:
+GitHub-hosted Linux runners are Azure virtual machines with a root disk mounted on `/`. Part of it is consumed by preinstalled build tools and software, see [GitHub runner images](https://github.com/actions/runner-images/blob/main/images/ubuntu/) for details on what's included
 
-- **75 GB** OS disk mounted on `/`
-- **75 GB** temp disk mounted on `/mnt`
+Disk space on public repository GitHub-hosted runners, as measured by the [Query Runners](https://github.com/nepalevov/maximize-build-space/actions/workflows/query-runners.yml) workflow:
 
-Of the `72 GB` root filesystem, only `~22 GB` is available by default. The remainder is consumed by preinstalled build tools and software. See [GitHub runner images](https://github.com/actions/runner-images/blob/main/images/ubuntu/) for details on what's included.
+<!-- TODO: periodically get the table from Query Runners workflow summary and update here -->
+| Label              | VM                  | Root disk size | Free    |
+| ------------------ | ------------------- | -------------- | ------- |
+| `ubuntu-latest`    | `Standard_D4ads_v5` | 145 GiB        | 88 GiB  |
+| `ubuntu-26.04`     | `Standard_D4ads_v7` | 145 GiB        | 87 GiB  |
+| `ubuntu-24.04`     | `Standard_D4ads_v7` | 145 GiB        | 86 GiB  |
+| `ubuntu-22.04`     | `Standard_D4ads_v7` | 146 GiB        | 87 GiB  |
+| `ubuntu-26.04-arm` | `Standard_D4pds_v6` | 145 GiB        | 106 GiB |
+| `ubuntu-24.04-arm` | `Standard_D4pds_v6` | 145 GiB        | 107 GiB |
+| `ubuntu-22.04-arm` | `Standard_D4pds_v6` | 146 GiB        | 110 GiB |
+
+> [!note]
+> The exact VM behind a label is not guaranteed, subsequent runs may be assigned a different VM
 
 This action frees up space by:
 
 1. (Optionally) removes unwanted preinstalled software
-1. (Optionally) disables & removes the swapfile
-1. (Optionally) sets `TMPDIR` environment variable to point to `/mnt`, so that temporary files created by build tools are stored on the ephemeral disk instead of the root disk
+1. (Optionally) disables swap & removes the swapfile
+1. (Optionally) sets `TMPDIR` environment variable to point to `/mnt` if it's a separate disk
 
-Result: Up to `42 GB` of additional space becomes available for your builds
+Result: additional space becomes available for your builds, the amount depends on the enabled options
 
 ## Statistics
 
@@ -33,11 +44,7 @@ Result: Up to `42 GB` of additional space becomes available for your builds
 
 ## Usage
 
-> [!note]
-> All removal options are **disabled by default**. Enable only the options your build requires
-
-> [!tip]
-> More enabled options = longer execution time. Balance space needs with workflow performance
+All removal options are **disabled by default**. Enable only the options your build requires, as each enabled option increases the execution time
 
 ```yaml
 name: Build with Extended Disk Space
@@ -50,7 +57,7 @@ jobs:
       - name: Maximize build space
         uses: nepalevov/maximize-build-space@v1 # x-release-please-major
         with:
-          remove-android: 'true'
+          remove-android: "true"
           # Other options as needed
       - name: Checkout
         uses: actions/checkout@v7
