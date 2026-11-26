@@ -101,10 +101,12 @@ runs:
   steps:
     - name: Disk space report before modification
       shell: bash
+      env:
+        VERBOSE: ${{ inputs.verbose }}
       run: |
         echo "==> Available space before cleanup"
         echo
-        if [[ ${{ inputs.verbose }} == 'true' ]]; then
+        if [[ "$VERBOSE" == 'true' ]]; then
           df -BM
         else
           df -h
@@ -112,6 +114,30 @@ runs:
 
     - name: Maximize build disk space
       shell: bash
+      env:
+        REMOVE_DOTNET: ${{ inputs.remove-dotnet }}
+        REMOVE_ANDROID: ${{ inputs.remove-android }}
+        REMOVE_HASKELL: ${{ inputs.remove-haskell }}
+        REMOVE_CODEQL: ${{ inputs.remove-codeql }}
+        REMOVE_CACHED_TOOLS: ${{ inputs.remove-cached-tools }}
+        REMOVE_SWIFT: ${{ inputs.remove-swift }}
+        REMOVE_JULIA: ${{ inputs.remove-julia }}
+        REMOVE_RUST: ${{ inputs.remove-rust }}
+        REMOVE_PYTHON: ${{ inputs.remove-python }}
+        REMOVE_NODE: ${{ inputs.remove-node }}
+        REMOVE_GO: ${{ inputs.remove-go }}
+        REMOVE_RUBY: ${{ inputs.remove-ruby }}
+        DOCKER_CLEANUP: ${{ inputs.docker-cleanup }}
+        VERBOSE: ${{ inputs.verbose }}
+        REMOVE_SWAPFILE: ${{ inputs.remove-swapfile }}
+        REMOVE_JAVA: ${{ inputs.remove-java }}
+        REMOVE_BROWSERS: ${{ inputs.remove-browsers }}
+        REMOVE_CLOUD_TOOLS: ${{ inputs.remove-cloud-tools }}
+        REMOVE_KUBERNETES_TOOLS: ${{ inputs.remove-kubernetes-tools }}
+        REMOVE_POWERSHELL: ${{ inputs.remove-powershell }}
+        REMOVE_CONTAINER_TOOLS: ${{ inputs.remove-container-tools }}
+        REMOVE_LARGE_PACKAGES: ${{ inputs.remove-large-packages }}
+        SET_TMPDIR: ${{ inputs.set-tmpdir }}
       run: |
         set -euo pipefail
         shopt -s nullglob
@@ -123,125 +149,125 @@ runs:
         CODENAME=$(lsb_release -c | cut -d ":" -f 2 | xargs)
 
         echo -n "  Removing:     "
-        if [[ ${{ inputs.remove-dotnet }} == 'true' ]]; then
+        if [[ "$REMOVE_DOTNET" == 'true' ]]; then
           echo -n "dotnet "
         fi
-        if [[ ${{ inputs.remove-android }} == 'true' ]]; then
+        if [[ "$REMOVE_ANDROID" == 'true' ]]; then
           echo -n "android "
         fi
-        if [[ ${{ inputs.remove-haskell }} == 'true' ]]; then
+        if [[ "$REMOVE_HASKELL" == 'true' ]]; then
           echo -n "haskell "
         fi
-        if [[ ${{ inputs.remove-codeql }} == 'true' ]]; then
+        if [[ "$REMOVE_CODEQL" == 'true' ]]; then
           echo -n "codeql "
         fi
-        if [[ ${{ inputs.docker-cleanup }} == 'true' ]]; then
+        if [[ "$DOCKER_CLEANUP" == 'true' ]]; then
           echo -n "docker "
         fi
-        if [[ ${{ inputs.remove-large-packages }} == 'true' ]]; then
+        if [[ "$REMOVE_LARGE_PACKAGES" == 'true' ]]; then
           echo -n "large_packages "
         fi
-        if [[ ${{ inputs.remove-cached-tools }} == 'true' ]]; then
+        if [[ "$REMOVE_CACHED_TOOLS" == 'true' ]]; then
           echo -n "cached_tools "
         fi
-        if [[ ${{ inputs.remove-swapfile }} == 'true' ]]; then
+        if [[ "$REMOVE_SWAPFILE" == 'true' ]]; then
           echo -n "swapfile "
         fi
-        if [[ ${{ inputs.remove-java }} == 'true' ]]; then
+        if [[ "$REMOVE_JAVA" == 'true' ]]; then
           echo -n "java "
         fi
-        if [[ ${{ inputs.remove-swift }} == 'true' ]]; then
+        if [[ "$REMOVE_SWIFT" == 'true' ]]; then
           echo -n "swift "
         fi
-        if [[ ${{ inputs.remove-julia }} == 'true' ]]; then
+        if [[ "$REMOVE_JULIA" == 'true' ]]; then
           echo -n "julia "
         fi
-        if [[ ${{ inputs.remove-browsers }} == 'true' ]]; then
+        if [[ "$REMOVE_BROWSERS" == 'true' ]]; then
           echo -n "browsers "
         fi
-        if [[ ${{ inputs.remove-cloud-tools }} == 'true' ]]; then
+        if [[ "$REMOVE_CLOUD_TOOLS" == 'true' ]]; then
           echo -n "cloud_tools "
         fi
-        if [[ ${{ inputs.remove-kubernetes-tools }} == 'true' ]]; then
+        if [[ "$REMOVE_KUBERNETES_TOOLS" == 'true' ]]; then
           echo -n "k8s_tools "
         fi
-        if [[ ${{ inputs.remove-powershell }} == 'true' ]]; then
+        if [[ "$REMOVE_POWERSHELL" == 'true' ]]; then
           echo -n "powershell "
         fi
-        if [[ ${{ inputs.remove-container-tools }} == 'true' ]]; then
+        if [[ "$REMOVE_CONTAINER_TOOLS" == 'true' ]]; then
           echo -n "containers "
         fi
-        if [[ ${{ inputs.remove-rust }} == 'true' ]]; then
+        if [[ "$REMOVE_RUST" == 'true' ]]; then
           echo -n "rust "
         fi
-        if [[ ${{ inputs.remove-python }} == 'true' ]]; then
+        if [[ "$REMOVE_PYTHON" == 'true' ]]; then
           echo -n "python "
         fi
-        if [[ ${{ inputs.remove-node }} == 'true' ]]; then
+        if [[ "$REMOVE_NODE" == 'true' ]]; then
           echo -n "node "
         fi
-        if [[ ${{ inputs.remove-go }} == 'true' ]]; then
+        if [[ "$REMOVE_GO" == 'true' ]]; then
           echo -n "go "
         fi
-        if [[ ${{ inputs.remove-ruby }} == 'true' ]]; then
+        if [[ "$REMOVE_RUBY" == 'true' ]]; then
           echo -n "ruby "
         fi
         echo
 
         echo -n "  Setting:     "
-        if [[ ${{ inputs.set-tmpdir }} == 'true' ]]; then
+        if [[ "$SET_TMPDIR" == 'true' ]]; then
           echo -n "TMPDIR to /mnt"
         fi
         echo
 
         verbose=""
-        if [[ ${{ inputs.verbose }} == 'true' ]]; then
+        if [[ "$VERBOSE" == 'true' ]]; then
           verbose=-v
         fi
 
         echo "Removing unwanted software... "
 
         DIRS_TO_REMOVE=""
-        if [[ ${{ inputs.remove-dotnet }} == 'true' ]]; then
+        if [[ "$REMOVE_DOTNET" == 'true' ]]; then
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/share/dotnet"
         fi
-        if [[ ${{ inputs.remove-android }} == 'true' ]]; then
+        if [[ "$REMOVE_ANDROID" == 'true' ]]; then
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/local/lib/android"
         fi
-        if [[ ${{ inputs.remove-haskell }} == 'true' ]]; then
+        if [[ "$REMOVE_HASKELL" == 'true' ]]; then
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /opt/ghc /usr/local/.ghcup"
         fi
-        if [[ ${{ inputs.remove-codeql }} == 'true' ]]; then
+        if [[ "$REMOVE_CODEQL" == 'true' ]]; then
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /opt/hostedtoolcache/CodeQL"
         fi
-        if [[ ${{ inputs.remove-cached-tools }} == 'true' ]]; then
+        if [[ "$REMOVE_CACHED_TOOLS" == 'true' ]]; then
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE $AGENT_TOOLSDIRECTORY"
         fi
-        if [[ ${{ inputs.remove-swift }} == 'true' ]]; then
+        if [[ "$REMOVE_SWIFT" == 'true' ]]; then
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/share/swift"
         fi
-        if [[ ${{ inputs.remove-julia }} == 'true' ]]; then
+        if [[ "$REMOVE_JULIA" == 'true' ]]; then
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/local/julia*"
         fi
-        if [[ ${{ inputs.remove-rust }} == 'true' ]]; then
+        if [[ "$REMOVE_RUST" == 'true' ]]; then
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /etc/skel/.rustup /etc/skel/.cargo /home/runner/.rustup /home/runner/.cargo"
         fi
-        if [[ ${{ inputs.remove-python }} == 'true' ]]; then
+        if [[ "$REMOVE_PYTHON" == 'true' ]]; then
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /opt/pipx /opt/pipx_bin /usr/share/miniconda /usr/bin/conda"
         fi
-        if [[ ${{ inputs.remove-node }} == 'true' ]]; then
+        if [[ "$REMOVE_NODE" == 'true' ]]; then
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /opt/node/"
         fi
-        if [[ ${{ inputs.remove-go }} == 'true' ]]; then
+        if [[ "$REMOVE_GO" == 'true' ]]; then
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /opt/go"
         fi
-        if [[ ${{ inputs.remove-ruby }} == 'true' ]]; then
+        if [[ "$REMOVE_RUBY" == 'true' ]]; then
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /opt/Ruby"
         fi
 
         # Docker Cleanup
-        if [[ ${{ inputs.docker-cleanup }} == 'true' ]]; then
-          if [[ ${{ inputs.verbose }} == 'true' ]]; then
+        if [[ "$DOCKER_CLEANUP" == 'true' ]]; then
+          if [[ "$VERBOSE" == 'true' ]]; then
             echo "::group::Docker cleanup"
             sudo docker image prune --all --force
             sudo docker builder prune --all --force
@@ -253,8 +279,8 @@ runs:
         fi
 
         # Swapfile removal
-        if [[ ${{ inputs.remove-swapfile }} == 'true' ]]; then
-          if [[ ${{ inputs.verbose }} == 'true' ]]; then
+        if [[ "$REMOVE_SWAPFILE" == 'true' ]]; then
+          if [[ "$VERBOSE" == 'true' ]]; then
             echo "::group::Removing swapfile"
             sudo swapoff -a
             sudo eatmydata rm -f /mnt/swapfile
@@ -266,8 +292,8 @@ runs:
         fi
 
         # Java removal
-        if [[ ${{ inputs.remove-java }} == 'true' ]]; then
-          if [[ ${{ inputs.verbose }} == 'true' ]]; then
+        if [[ "$REMOVE_JAVA" == 'true' ]]; then
+          if [[ "$VERBOSE" == 'true' ]]; then
             echo "::group::Removing Java"
             sudo apt-get remove --autoremove -y '^temurin-.*-jdk' ant ant-optional
             echo "::endgroup::"
@@ -278,8 +304,8 @@ runs:
         fi
 
         # Browser removal (apt + directories)
-        if [[ ${{ inputs.remove-browsers }} == 'true' ]]; then
-          if [[ ${{ inputs.verbose }} == 'true' ]]; then
+        if [[ "$REMOVE_BROWSERS" == 'true' ]]; then
+          if [[ "$VERBOSE" == 'true' ]]; then
             echo "::group::Removing browsers"
             sudo apt-get remove --autoremove -y google-chrome-stable microsoft-edge-stable firefox --ignore-missing
             echo "::endgroup::"
@@ -290,11 +316,11 @@ runs:
         fi
 
         # Cloud tools removal (directories + apt)
-        if [[ ${{ inputs.remove-cloud-tools }} == 'true' ]]; then
+        if [[ "$REMOVE_CLOUD_TOOLS" == 'true' ]]; then
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/local/aws-cli /usr/local/aws-sam-cli /opt/az /usr/local/bin/aws /usr/local/bin/aws_completer /usr/local/bin/sam /usr/local/bin/azcopy /usr/lib/google-cloud-sdk"
           # Remove cloud CLIs via apt
           pkgs=$(list_installed_dpkg azure-cli 'google-cloud-*' 'gcloud-*' session-manager-plugin || true)
-          if [[ ${{ inputs.verbose }} == 'true' ]]; then
+          if [[ "$VERBOSE" == 'true' ]]; then
             echo "::group::Removing cloud tools"
             sudo apt-get remove --autoremove -y $pkgs
             echo "::endgroup::"
@@ -304,10 +330,10 @@ runs:
         fi
 
         # Kubernetes tools removal
-        if [[ ${{ inputs.remove-kubernetes-tools }} == 'true' ]]; then
+        if [[ "$REMOVE_KUBERNETES_TOOLS" == 'true' ]]; then
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/bin/kubectl* /usr/local/bin/kind /usr/local/bin/minikube /usr/local/bin/kustomize /usr/local/bin/helm"
           # Remove kubectl via apt
-          if [[ ${{ inputs.verbose }} == 'true' ]]; then
+          if [[ "$VERBOSE" == 'true' ]]; then
             echo "::group::Removing Kubernetes tools"
             sudo apt-get remove --autoremove -y kubectl --ignore-missing
             echo "::endgroup::"
@@ -317,9 +343,9 @@ runs:
         fi
 
         # PowerShell removal
-        if [[ ${{ inputs.remove-powershell }} == 'true' ]]; then
+        if [[ "$REMOVE_POWERSHELL" == 'true' ]]; then
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/share/Az_* /usr/share/PowerShellGet* /usr/local/share/powershell"
-          if [[ ${{ inputs.verbose }} == 'true' ]]; then
+          if [[ "$VERBOSE" == 'true' ]]; then
             echo "::group::Removing PowerShell"
             sudo apt-get remove --autoremove -y powershell --ignore-missing
             echo "::endgroup::"
@@ -329,8 +355,8 @@ runs:
         fi
 
         # Container tools removal (apt only)
-        if [[ ${{ inputs.remove-container-tools }} == 'true' ]]; then
-          if [[ ${{ inputs.verbose }} == 'true' ]]; then
+        if [[ "$REMOVE_CONTAINER_TOOLS" == 'true' ]]; then
+          if [[ "$VERBOSE" == 'true' ]]; then
             echo "::group::Removing container tools"
             sudo apt-get remove --autoremove -y podman buildah skopeo containernetworking-plugins --ignore-missing
             echo "::endgroup::"
@@ -341,7 +367,7 @@ runs:
 
         # Remove directories and files using eatmydata for faster deletion
         if [[ -n "$DIRS_TO_REMOVE" ]]; then
-          if [[ ${{ inputs.verbose }} == 'true' ]]; then
+          if [[ "$VERBOSE" == 'true' ]]; then
             echo "::group::Removing directories"
             printf '%s\n' $DIRS_TO_REMOVE | xargs -I {} sudo eatmydata rm -rf -v {}
             echo "::endgroup::"
@@ -351,9 +377,9 @@ runs:
         fi
 
         # Large packages removal (apt only)
-        if [[ ${{ inputs.remove-large-packages }} == 'true' ]]; then
+        if [[ "$REMOVE_LARGE_PACKAGES" == 'true' ]]; then
           pkgs=$(list_installed_dpkg 'aspnetcore-*' 'dotnet-*' 'llvm-*' '*php*' 'mongodb-*' 'mysql-*' mono-devel libgl1-mesa-dri || true)
-          if [[ ${{ inputs.verbose }} == 'true' ]]; then
+          if [[ "$VERBOSE" == 'true' ]]; then
             echo "::group::Removing large packages"
             sudo apt-get remove -y $pkgs
             sudo apt-get autoremove -y
@@ -366,7 +392,7 @@ runs:
           fi
         fi
 
-        if [[ ${{ inputs.set-tmpdir }} == 'true' ]]; then
+        if [[ "$SET_TMPDIR" == 'true' ]]; then
           sudo chmod 1777 /mnt
           echo "TMPDIR=/mnt" >> $GITHUB_ENV
         fi
@@ -374,10 +400,12 @@ runs:
 
     - name: Disk space report after modification
       shell: bash
+      env:
+        VERBOSE: ${{ inputs.verbose }}
       run: |
         echo "==> Available space after cleanup"
         echo
-        if [[ ${{ inputs.verbose }} == 'true' ]]; then
+        if [[ "$VERBOSE" == 'true' ]]; then
           df -BM
         else
           df -h
