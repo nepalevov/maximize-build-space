@@ -142,8 +142,14 @@ runs:
         set -euo pipefail
         shopt -s nullglob
 
-        list_installed_dpkg() {
-          dpkg --get-selections "$@" | grep -v deinstall | cut -f1
+        # Removes only the installed packages among the given names/globs, as apt-get fails on package names it doesn't know
+        # (e.g. google-chrome-stable on arm64) and --ignore-missing doesn't change that
+        remove_installed_dpkg() {
+          local pkgs
+          pkgs=$(dpkg --get-selections "$@" 2> /dev/null | grep -v deinstall | cut -f1 || true)
+          if [[ -n "$pkgs" ]]; then
+            sudo apt-get remove --autoremove -y $pkgs
+          fi
         }
 
         CODENAME=$(lsb_release -c | cut -d ":" -f 2 | xargs)
@@ -301,10 +307,10 @@ runs:
         if [[ "$REMOVE_JAVA" == 'true' ]]; then
           if [[ "$VERBOSE" == 'true' ]]; then
             echo "::group::Removing Java"
-            sudo apt-get remove --autoremove -y '^temurin-.*-jdk' ant ant-optional
+            remove_installed_dpkg 'temurin-*-jdk' ant ant-optional
             echo "::endgroup::"
           else
-            sudo apt-get remove --autoremove -y '^temurin-.*-jdk' ant ant-optional > /dev/null
+            remove_installed_dpkg 'temurin-*-jdk' ant ant-optional > /dev/null
           fi
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/lib/jvm /usr/share/apache-maven-* /usr/share/gradle-*"
         fi
@@ -313,10 +319,10 @@ runs:
         if [[ "$REMOVE_BROWSERS" == 'true' ]]; then
           if [[ "$VERBOSE" == 'true' ]]; then
             echo "::group::Removing browsers"
-            sudo apt-get remove --autoremove -y google-chrome-stable microsoft-edge-stable firefox --ignore-missing
+            remove_installed_dpkg google-chrome-stable microsoft-edge-stable firefox
             echo "::endgroup::"
           else
-            sudo apt-get remove --autoremove -y google-chrome-stable microsoft-edge-stable firefox > /dev/null
+            remove_installed_dpkg google-chrome-stable microsoft-edge-stable firefox > /dev/null
           fi
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/lib/firefox /usr/local/share/gecko_driver /usr/local/share/chromium /opt/microsoft /opt/google /usr/local/share/chromedriver-linux64 /usr/local/share/edge_driver /usr/bin/chromium /usr/bin/chromium-browser"
         fi
@@ -325,13 +331,12 @@ runs:
         if [[ "$REMOVE_CLOUD_TOOLS" == 'true' ]]; then
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/local/aws-cli /usr/local/aws-sam-cli /opt/az /usr/local/bin/aws /usr/local/bin/aws_completer /usr/local/bin/sam /usr/local/bin/azcopy /usr/lib/google-cloud-sdk"
           # Remove cloud CLIs via apt
-          pkgs=$(list_installed_dpkg azure-cli 'google-cloud-*' 'gcloud-*' session-manager-plugin || true)
           if [[ "$VERBOSE" == 'true' ]]; then
             echo "::group::Removing cloud tools"
-            sudo apt-get remove --autoremove -y $pkgs
+            remove_installed_dpkg azure-cli 'google-cloud-*' 'gcloud-*' session-manager-plugin
             echo "::endgroup::"
           else
-            sudo apt-get remove --autoremove -y $pkgs > /dev/null
+            remove_installed_dpkg azure-cli 'google-cloud-*' 'gcloud-*' session-manager-plugin > /dev/null
           fi
         fi
 
@@ -341,10 +346,10 @@ runs:
           # Remove kubectl via apt
           if [[ "$VERBOSE" == 'true' ]]; then
             echo "::group::Removing Kubernetes tools"
-            sudo apt-get remove --autoremove -y kubectl --ignore-missing
+            remove_installed_dpkg kubectl
             echo "::endgroup::"
           else
-            sudo apt-get remove --autoremove -y kubectl --ignore-missing > /dev/null
+            remove_installed_dpkg kubectl > /dev/null
           fi
         fi
 
@@ -353,10 +358,10 @@ runs:
           DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/share/Az_* /usr/share/PowerShellGet* /usr/local/share/powershell"
           if [[ "$VERBOSE" == 'true' ]]; then
             echo "::group::Removing PowerShell"
-            sudo apt-get remove --autoremove -y powershell --ignore-missing
+            remove_installed_dpkg powershell
             echo "::endgroup::"
           else
-            sudo apt-get remove --autoremove -y powershell --ignore-missing > /dev/null
+            remove_installed_dpkg powershell > /dev/null
           fi
         fi
 
@@ -364,10 +369,10 @@ runs:
         if [[ "$REMOVE_CONTAINER_TOOLS" == 'true' ]]; then
           if [[ "$VERBOSE" == 'true' ]]; then
             echo "::group::Removing container tools"
-            sudo apt-get remove --autoremove -y podman buildah skopeo containernetworking-plugins --ignore-missing
+            remove_installed_dpkg podman buildah skopeo containernetworking-plugins
             echo "::endgroup::"
           else
-            sudo apt-get remove --autoremove -y podman buildah skopeo containernetworking-plugins --ignore-missing > /dev/null
+            remove_installed_dpkg podman buildah skopeo containernetworking-plugins > /dev/null
           fi
         fi
 
@@ -384,16 +389,13 @@ runs:
 
         # Large packages removal (apt only)
         if [[ "$REMOVE_LARGE_PACKAGES" == 'true' ]]; then
-          pkgs=$(list_installed_dpkg 'aspnetcore-*' 'dotnet-*' 'llvm-*' '*php*' 'mongodb-*' 'mysql-*' mono-devel libgl1-mesa-dri || true)
           if [[ "$VERBOSE" == 'true' ]]; then
             echo "::group::Removing large packages"
-            sudo apt-get remove -y $pkgs
-            sudo apt-get autoremove -y
+            remove_installed_dpkg 'aspnetcore-*' 'dotnet-*' 'llvm-*' '*php*' 'mongodb-*' 'mysql-*' mono-devel libgl1-mesa-dri
             sudo apt-get clean
             echo "::endgroup::"
           else
-            sudo apt-get remove -y $pkgs > /dev/null
-            sudo apt-get autoremove -y > /dev/null
+            remove_installed_dpkg 'aspnetcore-*' 'dotnet-*' 'llvm-*' '*php*' 'mongodb-*' 'mysql-*' mono-devel libgl1-mesa-dri > /dev/null
             sudo apt-get clean > /dev/null
           fi
         fi
