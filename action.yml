@@ -89,7 +89,7 @@ inputs:
     required: false
     default: "false"
   set-tmpdir:
-    description: "Sets TMPDIR environment variable to /mnt for ephemeral disk storage usage"
+    description: "Sets TMPDIR environment variable to /mnt (only if /mnt is on a separate disk, e.g. ephemeral volume)"
     required: false
     default: "false"
   verbose:
@@ -393,8 +393,13 @@ runs:
         fi
 
         if [[ "$SET_TMPDIR" == 'true' ]]; then
-          sudo chmod 1777 /mnt
-          echo "TMPDIR=/mnt" >> $GITHUB_ENV
+          # /mnt gains no space unless it is a separate filesystem from the root one
+          if [[ -d /mnt && "$(stat -c %d /mnt)" != "$(stat -c %d /)" ]]; then
+            sudo chmod 1777 /mnt
+            echo "TMPDIR=/mnt" >> $GITHUB_ENV
+          else
+            echo "::notice::/mnt is missing or not a separate disk, TMPDIR left unchanged"
+          fi
         fi
         echo "... done"
 
