@@ -152,123 +152,44 @@ runs:
           fi
         }
 
-        CODENAME=$(lsb_release -c | cut -d ":" -f 2 | xargs)
-
-        echo -n "  Removing:     "
-        if [[ "$REMOVE_DOTNET" == 'true' ]]; then
-          echo -n "dotnet "
-        fi
-        if [[ "$REMOVE_ANDROID" == 'true' ]]; then
-          echo -n "android "
-        fi
-        if [[ "$REMOVE_HASKELL" == 'true' ]]; then
-          echo -n "haskell "
-        fi
-        if [[ "$REMOVE_CODEQL" == 'true' ]]; then
-          echo -n "codeql "
-        fi
-        if [[ "$DOCKER_CLEANUP" == 'true' ]]; then
-          echo -n "docker "
-        fi
-        if [[ "$REMOVE_LARGE_PACKAGES" == 'true' ]]; then
-          echo -n "large_packages "
-        fi
-        if [[ "$REMOVE_CACHED_TOOLS" == 'true' ]]; then
-          echo -n "cached_tools "
-        fi
-        if [[ "$REMOVE_SWAPFILE" == 'true' ]]; then
-          echo -n "swapfile "
-        fi
-        if [[ "$REMOVE_JAVA" == 'true' ]]; then
-          echo -n "java "
-        fi
-        if [[ "$REMOVE_SWIFT" == 'true' ]]; then
-          echo -n "swift "
-        fi
-        if [[ "$REMOVE_JULIA" == 'true' ]]; then
-          echo -n "julia "
-        fi
-        if [[ "$REMOVE_BROWSERS" == 'true' ]]; then
-          echo -n "browsers "
-        fi
-        if [[ "$REMOVE_CLOUD_TOOLS" == 'true' ]]; then
-          echo -n "cloud_tools "
-        fi
-        if [[ "$REMOVE_KUBERNETES_TOOLS" == 'true' ]]; then
-          echo -n "k8s_tools "
-        fi
-        if [[ "$REMOVE_POWERSHELL" == 'true' ]]; then
-          echo -n "powershell "
-        fi
-        if [[ "$REMOVE_CONTAINER_TOOLS" == 'true' ]]; then
-          echo -n "containers "
-        fi
-        if [[ "$REMOVE_RUST" == 'true' ]]; then
-          echo -n "rust "
-        fi
-        if [[ "$REMOVE_PYTHON" == 'true' ]]; then
-          echo -n "python "
-        fi
-        if [[ "$REMOVE_NODE" == 'true' ]]; then
-          echo -n "node "
-        fi
-        if [[ "$REMOVE_GO" == 'true' ]]; then
-          echo -n "go "
-        fi
-        if [[ "$REMOVE_RUBY" == 'true' ]]; then
-          echo -n "ruby "
-        fi
-        echo
-
-        echo -n "  Setting:     "
-        if [[ "$SET_TMPDIR" == 'true' ]]; then
-          echo -n "TMPDIR to /mnt"
-        fi
-        echo
-
-        verbose=""
-        if [[ "$VERBOSE" == 'true' ]]; then
-          verbose=-v
-        fi
-
         echo "Removing unwanted software... "
 
-        DIRS_TO_REMOVE=""
+        dirs_to_remove=""
         if [[ "$REMOVE_DOTNET" == 'true' ]]; then
-          DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/share/dotnet"
+          dirs_to_remove="$dirs_to_remove /usr/share/dotnet"
         fi
         if [[ "$REMOVE_ANDROID" == 'true' ]]; then
-          DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/local/lib/android"
+          dirs_to_remove="$dirs_to_remove /usr/local/lib/android"
         fi
         if [[ "$REMOVE_HASKELL" == 'true' ]]; then
-          DIRS_TO_REMOVE="$DIRS_TO_REMOVE /opt/ghc /usr/local/.ghcup"
+          dirs_to_remove="$dirs_to_remove /opt/ghc /usr/local/.ghcup"
         fi
         if [[ "$REMOVE_CODEQL" == 'true' ]]; then
-          DIRS_TO_REMOVE="$DIRS_TO_REMOVE /opt/hostedtoolcache/CodeQL"
+          dirs_to_remove="$dirs_to_remove /opt/hostedtoolcache/CodeQL"
         fi
         if [[ "$REMOVE_CACHED_TOOLS" == 'true' ]]; then
-          DIRS_TO_REMOVE="$DIRS_TO_REMOVE $AGENT_TOOLSDIRECTORY"
+          dirs_to_remove="$dirs_to_remove ${RUNNER_TOOL_CACHE:-}"
         fi
         if [[ "$REMOVE_SWIFT" == 'true' ]]; then
-          DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/share/swift"
+          dirs_to_remove="$dirs_to_remove /usr/share/swift"
         fi
         if [[ "$REMOVE_JULIA" == 'true' ]]; then
-          DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/local/julia*"
+          dirs_to_remove="$dirs_to_remove /usr/local/julia*"
         fi
         if [[ "$REMOVE_RUST" == 'true' ]]; then
-          DIRS_TO_REMOVE="$DIRS_TO_REMOVE /etc/skel/.rustup /etc/skel/.cargo /home/runner/.rustup /home/runner/.cargo"
+          dirs_to_remove="$dirs_to_remove /etc/skel/.rustup /etc/skel/.cargo /home/runner/.rustup /home/runner/.cargo"
         fi
         if [[ "$REMOVE_PYTHON" == 'true' ]]; then
-          DIRS_TO_REMOVE="$DIRS_TO_REMOVE /opt/pipx /opt/pipx_bin /usr/share/miniconda /usr/bin/conda"
+          dirs_to_remove="$dirs_to_remove /opt/pipx /opt/pipx_bin /usr/share/miniconda /usr/bin/conda"
         fi
         if [[ "$REMOVE_NODE" == 'true' ]]; then
-          DIRS_TO_REMOVE="$DIRS_TO_REMOVE /opt/node/"
+          dirs_to_remove="$dirs_to_remove /opt/node/"
         fi
         if [[ "$REMOVE_GO" == 'true' ]]; then
-          DIRS_TO_REMOVE="$DIRS_TO_REMOVE /opt/go"
+          dirs_to_remove="$dirs_to_remove /opt/go"
         fi
         if [[ "$REMOVE_RUBY" == 'true' ]]; then
-          DIRS_TO_REMOVE="$DIRS_TO_REMOVE /opt/Ruby"
+          dirs_to_remove="$dirs_to_remove /opt/Ruby"
         fi
 
         # Docker Cleanup
@@ -312,7 +233,7 @@ runs:
           else
             remove_installed_dpkg 'temurin-*-jdk' ant ant-optional > /dev/null
           fi
-          DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/lib/jvm /usr/share/apache-maven-* /usr/share/gradle-*"
+          dirs_to_remove="$dirs_to_remove /usr/lib/jvm /usr/share/apache-maven-* /usr/share/gradle-*"
         fi
 
         # Browser removal (apt + directories)
@@ -324,12 +245,12 @@ runs:
           else
             remove_installed_dpkg google-chrome-stable microsoft-edge-stable firefox > /dev/null
           fi
-          DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/lib/firefox /usr/local/share/gecko_driver /usr/local/share/chromium /opt/microsoft /opt/google /usr/local/share/chromedriver-linux64 /usr/local/share/edge_driver /usr/bin/chromium /usr/bin/chromium-browser"
+          dirs_to_remove="$dirs_to_remove /usr/lib/firefox /usr/local/share/gecko_driver /usr/local/share/chromium /opt/microsoft /opt/google /usr/local/share/chromedriver-linux64 /usr/local/share/edge_driver /usr/bin/chromium /usr/bin/chromium-browser"
         fi
 
         # Cloud tools removal (directories + apt)
         if [[ "$REMOVE_CLOUD_TOOLS" == 'true' ]]; then
-          DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/local/aws-cli /usr/local/aws-sam-cli /opt/az /usr/local/bin/aws /usr/local/bin/aws_completer /usr/local/bin/sam /usr/local/bin/azcopy /usr/lib/google-cloud-sdk"
+          dirs_to_remove="$dirs_to_remove /usr/local/aws-cli /usr/local/aws-sam-cli /opt/az /usr/local/bin/aws /usr/local/bin/aws_completer /usr/local/bin/sam /usr/local/bin/azcopy /usr/lib/google-cloud-sdk"
           # Remove cloud CLIs via apt
           if [[ "$VERBOSE" == 'true' ]]; then
             echo "::group::Removing cloud tools"
@@ -342,7 +263,7 @@ runs:
 
         # Kubernetes tools removal
         if [[ "$REMOVE_KUBERNETES_TOOLS" == 'true' ]]; then
-          DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/bin/kubectl* /usr/local/bin/kind /usr/local/bin/minikube /usr/local/bin/kustomize /usr/local/bin/helm"
+          dirs_to_remove="$dirs_to_remove /usr/bin/kubectl* /usr/local/bin/kind /usr/local/bin/minikube /usr/local/bin/kustomize /usr/local/bin/helm"
           # Remove kubectl via apt
           if [[ "$VERBOSE" == 'true' ]]; then
             echo "::group::Removing Kubernetes tools"
@@ -355,7 +276,7 @@ runs:
 
         # PowerShell removal
         if [[ "$REMOVE_POWERSHELL" == 'true' ]]; then
-          DIRS_TO_REMOVE="$DIRS_TO_REMOVE /usr/share/Az_* /usr/share/PowerShellGet* /usr/local/share/powershell"
+          dirs_to_remove="$dirs_to_remove /usr/share/Az_* /usr/share/PowerShellGet* /usr/local/share/powershell"
           if [[ "$VERBOSE" == 'true' ]]; then
             echo "::group::Removing PowerShell"
             remove_installed_dpkg powershell
@@ -377,13 +298,13 @@ runs:
         fi
 
         # Remove directories and files using eatmydata for faster deletion
-        if [[ -n "$DIRS_TO_REMOVE" ]]; then
+        if [[ -n "$dirs_to_remove" ]]; then
           if [[ "$VERBOSE" == 'true' ]]; then
             echo "::group::Removing directories"
-            printf '%s\n' $DIRS_TO_REMOVE | xargs -I {} sudo eatmydata rm -rf -v {}
+            printf '%s\n' $dirs_to_remove | xargs -I {} sudo eatmydata rm -rf -v {}
             echo "::endgroup::"
           else
-            printf '%s\0' $DIRS_TO_REMOVE | sudo xargs -0 -n1 -P4 eatmydata rm -rf
+            printf '%s\0' $dirs_to_remove | sudo xargs -0 -n1 -P4 eatmydata rm -rf
           fi
         fi
 
