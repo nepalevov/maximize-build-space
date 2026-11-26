@@ -329,12 +329,15 @@ runs:
         fi
 
         if [[ "$SET_TMPDIR" == 'true' ]]; then
-          # /mnt gains no space unless it is a separate filesystem from the root one
-          if [[ -d /mnt && "$(stat -c %d /mnt)" != "$(stat -c %d /)" ]]; then
+          # Setting TMPDIR=/mnt gains no space unless it is on a separate disk from root volume
+          current_tmpdir="${TMPDIR:-/tmp}"
+          if [[ ! -d /mnt ]]; then
+            echo "::warning::/mnt does not exist, TMPDIR left unchanged"
+          elif [[ "$(stat -c %d /mnt)" == "$(stat -c %d "$current_tmpdir")" ]]; then
+            echo "::warning::/mnt is on the same disk as the current TMPDIR ($current_tmpdir), TMPDIR left unchanged"
+          else
             sudo chmod 1777 /mnt
             echo "TMPDIR=/mnt" >> $GITHUB_ENV
-          else
-            echo "::notice::/mnt is missing or not a separate disk, TMPDIR left unchanged"
           fi
         fi
         echo "... done"
