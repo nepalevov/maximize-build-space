@@ -329,12 +329,22 @@ runs:
         fi
 
         if [[ "$SET_TMPDIR" == 'true' ]]; then
-          # Setting TMPDIR=/mnt gains no space unless it is on a separate disk from root volume
+          # Setting TMPDIR=/mnt only helps if it is a separate disk and have more free space than the current one
           current_tmpdir="${TMPDIR:-/tmp}"
+          skip_reason=''
           if [[ ! -d /mnt ]]; then
-            echo "::warning::/mnt does not exist, TMPDIR left unchanged"
+            skip_reason='/mnt does not exist'
           elif [[ "$(stat -c %d /mnt)" == "$(stat -c %d "$current_tmpdir")" ]]; then
-            echo "::warning::/mnt is on the same disk as the current TMPDIR ($current_tmpdir), TMPDIR left unchanged"
+            skip_reason="/mnt is on the same disk as the current TMPDIR ($current_tmpdir)"
+          else
+            mnt_free=$(df -B1 --output=avail /mnt | tail -n 1)
+            tmp_free=$(df -B1 --output=avail "$current_tmpdir" | tail -n 1)
+            if (( mnt_free <= tmp_free )); then
+              skip_reason="/mnt has less free space than the current TMPDIR ($current_tmpdir)"
+            fi
+          fi
+          if [[ -n "$skip_reason" ]]; then
+            echo "::warning::$skip_reason, TMPDIR left unchanged"
           else
             sudo chmod 1777 /mnt
             echo "TMPDIR=/mnt" >> $GITHUB_ENV
