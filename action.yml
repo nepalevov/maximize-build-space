@@ -280,14 +280,20 @@ runs:
 
         # Swapfile removal
         if [[ "$REMOVE_SWAPFILE" == 'true' ]]; then
+          # Find the swap files before disabling swap; `swapon --show` only lists the active swap areas
+          swapfiles=$(swapon --noheadings --raw --show=NAME,TYPE | awk '$2 == "file" { print $1 }' || true)
           if [[ "$VERBOSE" == 'true' ]]; then
             echo "::group::Removing swapfile"
             sudo swapoff -a
-            sudo eatmydata rm -f /mnt/swapfile
+            for swapfile in $swapfiles; do
+              sudo eatmydata rm -f -v "$swapfile"
+            done
             echo "::endgroup::"
           else
             sudo swapoff -a
-            sudo eatmydata rm -f /mnt/swapfile
+            for swapfile in $swapfiles; do
+              sudo eatmydata rm -f "$swapfile"
+            done
           fi
         fi
 
